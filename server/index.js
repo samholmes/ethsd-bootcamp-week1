@@ -21,16 +21,24 @@ app.get("/balance/:address", (req, res) => {
 app.post("/send", (req, res) => {
   const { sender, recipient, amount } = req.body;
 
+  if (!recipient) {
+    res.status(400).send({ message: "Invalid recipient address!" });
+    return
+  }
+
   setInitialBalance(sender);
   setInitialBalance(recipient);
 
   if (balances[sender] < amount) {
     res.status(400).send({ message: "Not enough funds!" });
-  } else {
-    balances[sender] -= amount;
-    balances[recipient] += amount;
-    res.send({ balance: balances[sender] });
-  }
+    return
+  }  
+
+  balances[sender] -= amount;
+  balances[recipient] += amount;
+  res.send({ balance: balances[sender] });
+
+  console.log(`Transferred ${amount} from ${sender} to ${recipient}`)
 });
 
 app.listen(port, () => {
