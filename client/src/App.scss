@@ -15,14 +15,18 @@ label {
 }
 
 .app {
-  display: flex;
   max-width: 1400px;
-  flex-wrap: wrap;
-  gap: 12px;
   margin: 0 auto;
 }
 
 .container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 24px 0px;
+}
+
+.box {
   flex-grow: 1;
   margin: 0 20px;
   background-color: #fff;
@@ -86,4 +90,29 @@ input[disabled] {
 .transfer {
   display: flex;
   flex-direction: column;
+}
+
+.address-info {
+  font-family: Courier, monospace;
+  display: flex;
+  flex-direction: row;
+}
+.address-info div {
+  padding: 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,.5);
+}
+.address-info .address {
+  background: rgb(68, 141, 194);
+  color: white;
+  text-shadow: 1px 1px 0px black;
+  border-radius: 3px 0px 0px 3px;
+  border-right: 0px;
+}
+.address-info .balance {
+  background: rgb(0, 117, 49);
+  color: white;
+  text-shadow: 1px 1px 0px black;
+  border-radius: 0px 3px 3px 0px;
+  border-left: 0px;
 }

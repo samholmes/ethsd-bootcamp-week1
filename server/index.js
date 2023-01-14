@@ -15,6 +15,11 @@ const balances = {
   [secretToAddress('world')]: 75, // world
 };
 
+app.get('/addressInfo', (req, res) => {
+  const addressInfo = Object.entries(balances).map(([address, balance]) => ({ address, balance }))
+  res.send({ addressInfo });
+})
+
 app.get("/balance/:address", (req, res) => {
   const { address } = req.params;
   const balance = balances[address] || 0;

@@ -6,6 +6,7 @@ import { secretToAddress, secretToPrivateKey, signMessage } from './utils.js'
 import server from "./server";
 import Transfer from "./Transfer";
 import Wallet from "./Wallet";
+import InfoScan from "./InfoScan";
 
 function App() {
   const [phrase, setPhrase] = useState("")
@@ -61,21 +62,44 @@ function App() {
         data: { balance },
       } = await server.post(`send`, payload);
       setBalance(balance - amount);
+
+      setAddressInfo(addressInfo => {
+        const recipientInfo = addressInfo.find(info => info.address === recipient)
+        recipientInfo.balance += amount
+        const senderInfo = addressInfo.find(info => info.address === address)
+        senderInfo.balance += amount
+        return addressInfo
+      })
     } catch (ex) {
       alert(ex.response.data.message);
     }
   }
 
+  const [addressInfo, setAddressInfo] = useState([]);
+
+  useEffect(() => {
+    const call = async () => {
+      const response = await server.get('addressInfo')
+      setAddressInfo(response.data.addressInfo)
+    }
+    call()
+  }, [])
+
 
   return (
     <div className="app">
-      <Wallet
-        address={address}
-        balance={balance}
-        phrase={phrase}
-        onChangePhrase={handleChangePhrase}
-      />
-      <Transfer address={address} onChangeBalance={handleBalanceChange} onSubmitSend={handleSubmitSend} />
+      <div className="container">
+        <Wallet
+          address={address}
+          balance={balance}
+          phrase={phrase}
+          onChangePhrase={handleChangePhrase}
+        />
+        <Transfer address={address} onChangeBalance={handleBalanceChange} onSubmitSend={handleSubmitSend} />
+      </div>
+      <div className="container">
+        <InfoScan addressInfo={addressInfo} />
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 function Wallet({ address, balance, phrase, onChangePhrase }) {
   return (
-    <div className="container wallet">
+    <div className="box wallet">
       <h1>Your Wallet</h1>
 
       <label>

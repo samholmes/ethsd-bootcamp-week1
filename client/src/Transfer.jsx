@@ -10,7 +10,7 @@ function Transfer({ address, onSubmitSend }) {
   }
 
   return (
-    <form className="container transfer" onSubmit={handleSubmit}>
+    <form className="box transfer" onSubmit={handleSubmit}>
       <h1>Send Transaction</h1>
 
       <label>
