@@ -1,4 +1,5 @@
 const express = require("express");
+const { secretToAddress } = require("./utils");
 const app = express();
 const cors = require("cors");
 const port = 3042;
@@ -7,9 +8,9 @@ app.use(cors());
 app.use(express.json());
 
 const balances = {
-  "0x1": 100,
-  "0x2": 50,
-  "0x3": 75,
+  [secretToAddress('hello')]: 100, // hello
+  [secretToAddress('ethereum')]: 50, // ethereum
+  [secretToAddress('world')]: 75, // world
 };
 
 app.get("/balance/:address", (req, res) => {
