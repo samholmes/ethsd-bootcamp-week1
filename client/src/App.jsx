@@ -1,49 +1,41 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 
 import "./App.scss";
 
 import { secretToAddress, secretToPrivateKey, signMessage } from './utils.js'
-import server from "./server";
-import Transfer from "./Transfer";
-import Wallet from "./Wallet";
+import Transaction from "./Transaction";
+import Generate from "./Generate";
 import InfoScan from "./InfoScan";
 
 function App() {
-  const [phrase, setPhrase] = useState("")
-  const [address, setAddress] = useState("");
-  const [balance, setBalance] = useState(0);
+  const [amount, setAmount] = useState("");
+  const [recipient, setRecipient] = useState("");
+  const [addressInfo, setAddressInfo] = useState([]);
 
-  function handleChangePhrase(phrase) {
-    setPhrase(phrase)
+  useEffect(() => {
+    const call = async () => {
+      const server = axios.create({
+        baseURL: "http://localhost:3042",
+      });
+      const response = await server.get('addressInfo')
+      setAddressInfo(response.data.addressInfo)
+    }
+    call()
+  }, [])
+
+  function handleChangeRecipient(recipient) {
+    setRecipient(recipient)
   }
   function handleBalanceChange(balance) {
     setBalance(balance)
   }
-
-  useEffect(() => {
+  async function handleChangeTransaction(recipient, amount) {
+    setAmount(amount)
+    setRecipient(recipient)
+  }
+  async function handleSubmitTransaction(phrase) {
     const address = secretToAddress(phrase)
-    setAddress(address)
-  }, [phrase])
-
-  useEffect(() => {
-    let stop = false
-    const handler = async () => {
-      if (address) {
-        const response = await server.get(`balance/${address}`);
-        if (stop) return
-        const { data: { balance } } = response
-        setBalance(balance);
-      } else {
-        setBalance(0);
-      }
-    }
-    handler().then(console.error)
-    return () => {
-      stop = true
-    }
-  }, [address])
-
-  async function handleSubmitSend(recipient, amount) {
     const privateKey = secretToPrivateKey(phrase)
     const payload = {
       sender: address,
@@ -58,44 +50,26 @@ function App() {
     console.log(payload)
     
     try {
+      const server = axios.create({
+        baseURL: "http://localhost:3042",
+      });
       const {
         data: { balance },
       } = await server.post(`send`, payload);
-      setBalance(balance - amount);
 
-      setAddressInfo(addressInfo => {
-        const recipientInfo = addressInfo.find(info => info.address === recipient)
-        recipientInfo.balance += amount
-        const senderInfo = addressInfo.find(info => info.address === address)
-        senderInfo.balance += amount
-        return addressInfo
-      })
+      // Update address info
+      const response = await server.get('addressInfo')
+      setAddressInfo(response.data.addressInfo)
     } catch (ex) {
       alert(ex.response.data.message);
     }
   }
 
-  const [addressInfo, setAddressInfo] = useState([]);
-
-  useEffect(() => {
-    const call = async () => {
-      const response = await server.get('addressInfo')
-      setAddressInfo(response.data.addressInfo)
-    }
-    call()
-  }, [])
-
-
   return (
     <div className="app">
       <div className="container">
-        <Wallet
-          address={address}
-          balance={balance}
-          phrase={phrase}
-          onChangePhrase={handleChangePhrase}
-        />
-        <Transfer address={address} onChangeBalance={handleBalanceChange} onSubmitSend={handleSubmitSend} />
+        <Transaction onChangeTransaction={handleChangeTransaction} onSubmitTransaction={handleSubmitTransaction} />
+        <Generate />
       </div>
       <div className="container">
         <InfoScan addressInfo={addressInfo} />
