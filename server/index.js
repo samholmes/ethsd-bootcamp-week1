@@ -1,5 +1,7 @@
 const express = require("express");
-const { secretToAddress } = require("./utils");
+const { secretToAddress, hashMessage, publicKeyToAddress } = require("./utils");
+const { recoverPublicKey } = require('ethereum-cryptography/secp256k1')
+const { toHex } = require('ethereum-cryptography/utils')
 const app = express();
 const cors = require("cors");
 const port = 3042;
@@ -20,13 +22,36 @@ app.get("/balance/:address", (req, res) => {
 });
 
 app.post("/send", (req, res) => {
-  const { sender, recipient, amount } = req.body;
+  const { signature, recovery, ...payload } = req.body;
+  const { sender, recipient, amount } = payload
+  const message = JSON.stringify(payload)
+  const messageHex = `${toHex(hashMessage(message))}`
+  const signatureHex = `${signature}`
 
-  if (!recipient) {
+  //
+  // Validation
+  //
+  
+  // Valid recipient address
+  if (!recipient || recipient.length !== 42) {
     res.status(400).send({ message: "Invalid recipient address!" });
     return
   }
 
+  // Valid signature
+  const expectedSenderPublicKey = recoverPublicKey(messageHex, signatureHex, recovery);
+  const expectedAddress = publicKeyToAddress(expectedSenderPublicKey)
+  if (expectedAddress !== sender)
+  {
+    res.status(400).send({ message: "Invalid signature!" });
+    return
+  }
+
+  
+  //
+  // Update ledger
+  //
+  
   setInitialBalance(sender);
   setInitialBalance(recipient);
 

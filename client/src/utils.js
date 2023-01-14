@@ -1,5 +1,5 @@
 import { keccak256 } from 'ethereum-cryptography/keccak'
-import { getPublicKey } from 'ethereum-cryptography/secp256k1'
+import { getPublicKey, sign} from 'ethereum-cryptography/secp256k1'
 import { toHex, utf8ToBytes } from 'ethereum-cryptography/utils'
 
 export function secretToAddress(secret) {
@@ -10,8 +10,7 @@ export function secretToAddress(secret) {
 }
 
 export function secretToPrivateKey(secret) {
-  const bytes = utf8ToBytes(secret) 
-  const hash = keccak256(bytes)
+  const hash = hashMessage(secret) 
   const hex = toHex(hash)
   return hex
 }
@@ -25,4 +24,20 @@ export function publicKeyToAddress(publicKey) {
   const hash = keccak256(new Uint8Array(rest))
   const slice = hash.slice(hash.length - 20)
   return `0x${toHex(slice)}`
+}
+
+// Signature:
+
+export async function signMessage(message, privateKey) {
+    const h = hashMessage(message)
+    const [signature, recovery] =  await sign(h, privateKey, { recovered: true })
+    return [toHex(signature), recovery]
+}
+
+// Etc:
+
+export function hashMessage(message) {
+    const b = utf8ToBytes(message)
+    const h = keccak256(b)
+    return h 
 }

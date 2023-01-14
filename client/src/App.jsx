@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import "./App.scss";
 
-import { secretToAddress } from './utils.js'
+import { secretToAddress, secretToPrivateKey, signMessage } from './utils.js'
 import server from "./server";
 import Transfer from "./Transfer";
 import Wallet from "./Wallet";
@@ -43,14 +43,23 @@ function App() {
   }, [address])
 
   async function handleSubmitSend(recipient, amount) {
+    const privateKey = secretToPrivateKey(phrase)
+    const payload = {
+      sender: address,
+      amount: amount,
+      recipient,
+    }
+    const message = JSON.stringify(payload)
+    const [signature, recovery] = await signMessage(message, privateKey)
+    payload.signature = signature
+    payload.recovery = recovery
+
+    console.log(payload)
+    
     try {
       const {
         data: { balance },
-      } = await server.post(`send`, {
-        sender: address,
-        amount: amount,
-        recipient,
-      });
+      } = await server.post(`send`, payload);
       setBalance(balance - amount);
     } catch (ex) {
       alert(ex.response.data.message);

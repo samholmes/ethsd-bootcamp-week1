@@ -2,6 +2,9 @@ const { keccak256 } = require('ethereum-cryptography/keccak')
 const { getPublicKey } = require('ethereum-cryptography/secp256k1')
 const { toHex, utf8ToBytes } = require('ethereum-cryptography/utils')
 
+
+// Address:
+
 function secretToAddress(secret) {
   const privateKey = secretToPrivateKey(secret)
   const publicKey = privateKeyToPublicKey(privateKey)
@@ -10,8 +13,7 @@ function secretToAddress(secret) {
 }
 
 function secretToPrivateKey(secret) {
-  const bytes = utf8ToBytes(secret) 
-  const hash = keccak256(bytes)
+  const hash = hashMessage(secret)
   const hex = toHex(hash)
   return hex
 }
@@ -27,9 +29,18 @@ function publicKeyToAddress(publicKey) {
   return `0x${toHex(slice)}`
 }
 
+// Etc:
+
+function hashMessage(message) {
+    const b = utf8ToBytes(message)
+    const h = keccak256(b)
+    return h 
+}
+
 module.exports = {
   secretToAddress,
   secretToPrivateKey,
   privateKeyToPublicKey,
   publicKeyToAddress,
+  hashMessage,
 }
