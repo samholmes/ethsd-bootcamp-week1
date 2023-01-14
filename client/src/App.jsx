@@ -1,25 +1,72 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import Wallet from "./Wallet";
-import Transfer from "./Transfer";
 import "./App.scss";
 
-function App() {
-  const [balance, setBalance] = useState(0);
-  const [address, setAddress] = useState("");
+import { secretToAddress } from './utils.js'
+import server from "./server";
+import Transfer from "./Transfer";
+import Wallet from "./Wallet";
 
-  const handleChangeAddress = (address) => {
-    setAddress(address)
+function App() {
+  const [phrase, setPhrase] = useState("")
+  const [address, setAddress] = useState("");
+  const [balance, setBalance] = useState(0);
+
+  function handleChangePhrase(phrase) {
+    setPhrase(phrase)
   }
+  function handleBalanceChange(balance) {
+    setBalance(balance)
+  }
+
+  useEffect(() => {
+    const address = secretToAddress(phrase)
+    setAddress(address)
+  }, [phrase])
+
+  useEffect(() => {
+    let stop = false
+    const handler = async () => {
+      if (address) {
+        const response = await server.get(`balance/${address}`);
+        if (stop) return
+        const { data: { balance } } = response
+        setBalance(balance);
+      } else {
+        setBalance(0);
+      }
+    }
+    handler().then(console.error)
+    return () => {
+      stop = true
+    }
+  }, [address])
+
+  async function handleSubmitSend(recipient, amount) {
+    try {
+      const {
+        data: { balance },
+      } = await server.post(`send`, {
+        sender: address,
+        amount: amount,
+        recipient,
+      });
+      setBalance(balance - amount);
+    } catch (ex) {
+      alert(ex.response.data.message);
+    }
+  }
+
 
   return (
     <div className="app">
       <Wallet
+        address={address}
         balance={balance}
-        setBalance={setBalance}
-        onChangeAddress={handleChangeAddress}
+        phrase={phrase}
+        onChangePhrase={handleChangePhrase}
       />
-      <Transfer setBalance={setBalance} address={address} />
+      <Transfer address={address} onChangeBalance={handleBalanceChange} onSubmitSend={handleSubmitSend} />
     </div>
   );
 }
