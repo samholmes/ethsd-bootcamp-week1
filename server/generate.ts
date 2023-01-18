@@ -4,6 +4,7 @@ import { ChatGPTAPIBrowser } from 'chatgpt'
 import { readFileSync } from 'fs'
 import { generateMnemonic } from 'ethereum-cryptography/bip39'
 import readline from 'readline'
+import crypto from 'crypto'
 
 config()
 
@@ -72,13 +73,16 @@ async function main() {
 main().catch(console.error)
 
 async function generate(api: ChatGPTAPIBrowser): Promise<string> {
+  const picks = []
+    while (picks.length < 5) {
 
-  const mnemonic = generateMnemonic(wordList)
-  const word = mnemonic.split(' ')
-  const five = word.slice(0, 5).join(', ')
+    const index = crypto.randomInt(0, wordList.length)
+    const word = wordList[index]
+    picks.push(word)
+  }
 
 
-  const header = `Using words: [${five}]`
+  const header = `Using words: [${picks}]`
   console.log(header)
   console.log(Array.from(header).map(() => '-').join(''))
 
@@ -90,7 +94,7 @@ async function generate(api: ChatGPTAPIBrowser): Promise<string> {
     return result.response
   }
 
-  const final = await chat(`Write a short sentence using all of the words in this list: ${five}. `
+  const final = await chat(`Write a short sentence using all of the words in this list: ${picks}. `
     +`The sentence must be exactly 12 words long. `
     +`The sentences so that no punctuation is used. `
     +`The sentence to be coherent and make sense. `
